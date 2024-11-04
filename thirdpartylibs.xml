@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<libraries>
+    <library>
+        <location>h5p-resizer.js</location>
+        <name>H5P iframe resizer</name>
+        <version>v127</version>
+        <license>GPL</license>
+        <licenseversion>v3</licenseversion>
+    </library>
+</libraries>
