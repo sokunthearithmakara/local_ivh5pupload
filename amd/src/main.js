@@ -231,7 +231,7 @@ export default class H5pUpload extends Base {
         };
 
         // Apply content.
-        const applyContent = async (annotation) => {
+        const applyContent = async(annotation) => {
             const data = await this.render(annotation, 'html');
             $(`#message[data-id='${annotation.id}'] .modal-body`).attr('id', 'content').html(data).fadeIn(300);
             if (annotation.hascompletion == 0) {
