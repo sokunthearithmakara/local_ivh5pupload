@@ -92,7 +92,7 @@ class main extends \ivplugin_richtext\main {
             if ($ext == 'h5p') {
                 return '<div class="loader w-100 position-absolute" style="top: 50%; left: 0;"></div>
                 <div class="w-100 h5p">'
-                    . \core_h5p\player::display($url, new \stdClass) . '</div>';
+                    . \core_h5p\player::display($url, new \stdClass, true, 'mod_interactivevideo') . '</div>';
             } else {
                 return '<div class="loader w-100 position-absolute" style="top: 50%; left: 0;"></div>
                 <iframe id="iframe" class="h5p-player" src="'

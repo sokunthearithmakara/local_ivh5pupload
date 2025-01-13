@@ -139,6 +139,32 @@ class form extends \mod_interactivevideo\form\base_form {
             $fromform->id,
         );
 
+        // Get file content, edit its H5PIntegration object, and save it back if the file is html.
+        $fs = get_file_storage();
+        $file = $fs->get_area_files($fromform->contextid, 'mod_interactivevideo', 'content', $fromform->id, 'id DESC', false);
+        $file = reset($file);
+        if ($file) {
+            $mimetype = $file->get_mimetype();
+            if ($mimetype !== 'text/html') {
+                return $fromform;
+            }
+            $content = $file->get_content();
+            $content = str_replace('H5PIntegration = {"ajax"', 'H5PIntegration = {"reportingIsEnabled": true, "ajax"', $content);
+
+            // Save the file back.
+            $fileinfo = [
+                'contextid' => $fromform->contextid,
+                'component' => 'mod_interactivevideo',
+                'filearea' => 'content',
+                'itemid' => $fromform->id,
+                'filepath' => '/',
+                'filename' => $file->get_filename(),
+            ];
+
+            $file->delete();
+            $file = $fs->create_file_from_string($fileinfo, $content);
+        }
+
         return $fromform;
     }
 }

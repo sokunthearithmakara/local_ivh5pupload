@@ -33,23 +33,9 @@ export default class H5pUpload extends Base {
         super.renderContainer(annotation);
         let $completiontoggle = $message.find('#completiontoggle');
         $message.find('#title .info').remove();
-        switch (annotation.completiontracking) {
-            case 'complete':
-                $completiontoggle.before(`<i class="bi bi-info-circle-fill mr-2 info" data-toggle="tooltip"
-                     data-container="#wrapper" data-trigger="hover"
-                     data-title="${M.util.get_string("completiononcomplete", "mod_interactivevideo")}"></i>`);
-                break;
-            case 'completepass':
-                $completiontoggle.before(`<i class="bi bi-info-circle-fill mr-2 info" data-toggle="tooltip"
-                     data-container="#wrapper" data-trigger="hover"
-                     data-title="${M.util.get_string("completiononcompletepass", "mod_interactivevideo")}"></i>`);
-                break;
-            case 'completefull':
-                $completiontoggle.before(`<i class="bi bi-info-circle-fill mr-2 info" data-toggle="tooltip"
-                     data-container="#wrapper" data-trigger="hover"
-                     data-title="${M.util.get_string("completiononcompletefull", "mod_interactivevideo")}"></i>`);
-                break;
-        }
+        $completiontoggle.before(`<i class="bi bi-info-circle-fill mr-2 info" data-toggle="tooltip"
+            data-container="#wrapper" data-trigger="hover"
+            data-title="${M.util.get_string("completionon" + annotation.completiontracking, "mod_interactivevideo")}"></i>`);
         $message.find('[data-toggle="tooltip"]').tooltip();
         return $message;
     }
@@ -113,21 +99,13 @@ export default class H5pUpload extends Base {
         }
         return true;
     }
-    /**
-     * Executes the interaction for a given annotation.
-     *
-     * @param {Object} annotation - The annotation object containing interaction details.
-     * @param {number} annotation.id - The unique identifier for the annotation.
-     * @param {string} annotation.completiontracking - The method of completion tracking for the annotation.
-     * @param {boolean} annotation.hascompletion - Indicates if the annotation has completion tracking.
-     * @param {boolean} annotation.completed - Indicates if the annotation is already completed.
-     * @param {string} annotation.displayoptions - The display options for the annotation (e.g., 'popup').
-     *
-     * @returns {Promise<void>} - A promise that resolves when the interaction is fully executed.
-     */
-    async runInteraction(annotation) {
-        await this.player.pause();
 
+    /**
+     * Applies the content of the annotation.
+     * @param {Object} annotation The annotation object
+     * @returns {void}
+     */
+    async applyContent(annotation) {
         const annoid = annotation.id;
         let self = this;
 
@@ -231,33 +209,19 @@ export default class H5pUpload extends Base {
         };
 
         // Apply content.
-        const applyContent = async(annotation) => {
-            const data = await this.render(annotation, 'html');
-            $(`#message[data-id='${annotation.id}'] .modal-body`).attr('id', 'content').html(data).fadeIn(300);
-            if (annotation.hascompletion == 0) {
-                return;
-            }
-            if (!annotation.completed && annotation.completiontracking == 'view') {
-                this.toggleCompletion(annotation.id, 'mark-done', 'automatic');
-                return;
-            }
-            if (annotation.completed) {
-                this.postContentRender(annotation);
-            } else {
-                this.postContentRender(annotation, xAPICheck(annotation));
-            }
-        };
-
-        await this.renderViewer(annotation);
-        this.renderContainer(annotation);
-        applyContent(annotation);
-
-        this.enableManualCompletion(annotation);
-
-        if (annotation.displayoptions == 'popup') {
-            $('#annotation-modal').on('shown.bs.modal', function() {
-                self.setModalDraggable('#annotation-modal .modal-dialog');
-            });
+        const data = await this.render(annotation, 'html');
+        $(`#message[data-id='${annotation.id}'] .modal-body`).attr('id', 'content').html(data).fadeIn(300);
+        if (annotation.hascompletion == 0) {
+            return;
+        }
+        if (!annotation.completed && annotation.completiontracking == 'view') {
+            this.toggleCompletion(annotation.id, 'mark-done', 'automatic');
+            return;
+        }
+        if (annotation.completed) {
+            this.postContentRender(annotation);
+        } else {
+            this.postContentRender(annotation, xAPICheck(annotation));
         }
     }
 }
