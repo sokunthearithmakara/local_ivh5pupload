@@ -209,7 +209,11 @@ export default class H5pUpload extends Base {
         };
 
         // Apply content.
-        const data = await this.render(annotation, 'html');
+        // We don't need to run the render method every time the content is applied. We can cache the content.
+        if (!self.cache[annotation.id] || self.isEditMode()) {
+            self.cache[annotation.id] = await this.render(annotation, 'html');
+        }
+        let data = self.cache[annotation.id];
         $(`#message[data-id='${annotation.id}'] .modal-body`).attr('id', 'content').html(data).fadeIn(300);
         if (annotation.hascompletion == 0) {
             return;
