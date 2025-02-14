@@ -11,6 +11,7 @@
         return; // Not supported
     }
     window.forkedh5pResizerInitialized = true;
+
     // Map actions to handlers
     var actionHandlers = {};
 
@@ -76,7 +77,7 @@
      */
     actionHandlers.resize = function(iframe, data) {
         // Resize iframe so all content is visible. Use scrollHeight to make sure we get everything
-        iframe.style.height = (data.scrollHeight) + 'px';
+        iframe.style.height = (data.scrollHeight + 50) + 'px';
     };
 
     // Listen for messages from iframes
@@ -119,10 +120,8 @@
     action: 'ready'
   };
   for (var i = 0; i < iframes.length; i++) {
-    if (iframes[i].src.indexOf('h5p') !== -1) {
+    if (iframes[i].src.indexOf('html') !== -1) {
       iframes[i].contentWindow.postMessage(ready, '*');
     }
   }
-
-
 })();

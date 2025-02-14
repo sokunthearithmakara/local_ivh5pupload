@@ -34,6 +34,7 @@ $string['h5puploadcontent'] = 'H5P content';
 $string['h5puploaddescription'] = 'Upload an H5P package in .html or .h5p format.';
 $string['pluginname'] = 'H5P content';
 $string['privacy:metadata'] = 'The H5P Content plugin doesn\'t store any personal data.';
+$string['tutorialurl'] = 'https://www.youtube.com/watch?v=44v2_QcpCEo';
 $string['usecustomcss'] = 'Use custom CSS';
 $string['usecustomcss_help'] = 'If enabled and your administrator has uploaded a custom CSS file, the H5P content will be styled using that CSS file. Otherwise, the default H5P styles in your uploaded file will be used.';
 $string['xapicheck'] = 'xAPI check';
