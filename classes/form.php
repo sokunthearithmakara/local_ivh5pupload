@@ -92,6 +92,19 @@ class form extends \mod_interactivevideo\form\base_form {
     }
 
     /**
+     * Process advanced settings
+     *
+     * @param \stdClass $data
+     * @return string
+     */
+    public function process_advanced_settings($data) {
+        $adv = parent::process_advanced_settings($data);
+        $adv = json_decode($adv);
+        $adv->savecurrentstate = $data->savecurrentstate;
+        return json_encode($adv);
+    }
+
+    /**
      * Form definition
      *
      * @return void
@@ -154,6 +167,25 @@ class form extends \mod_interactivevideo\form\base_form {
         $this->advanced_form_fields([
             'hascompletion' => true,
         ]);
+
+        // Save state.
+        $groups = [];
+        $groups[] = $mform->createElement(
+            'advcheckbox',
+            'savecurrentstate',
+            '',
+            get_string('yes'),
+            ['group' => 1],
+            [0, 1]
+        );
+        $groups[] = $mform->createElement(
+            'static',
+            'savecurrentstatedesc',
+            '',
+            '<span class="text-muted small w-100 d-block">'
+                . get_string('savecurrentstatedesc', 'ivplugin_contentbank') . '</span>'
+        );
+        $mform->addGroup($groups, '', get_string('savecurrentstate', 'ivplugin_contentbank'), null, false);
 
         // Go to segment when passed/failed.
         // Handle passing grade.

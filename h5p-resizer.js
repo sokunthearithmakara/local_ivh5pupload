@@ -77,7 +77,7 @@
      */
     actionHandlers.resize = function(iframe, data) {
         // Resize iframe so all content is visible. Use scrollHeight to make sure we get everything
-        iframe.style.height = (data.scrollHeight + 50) + 'px';
+        iframe.style.height = (data.scrollHeight + 100) + 'px';
     };
 
     // Listen for messages from iframes
