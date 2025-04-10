@@ -98,7 +98,7 @@ class main extends \ivplugin_richtext\main {
                 return '<div class="loader w-100 position-absolute" style="top: 50%; left: 0;"></div>
                 <iframe id="iframe" class="h5p-player" src="'
                     . $url->out()
-                    . '" style="width: 100%; height: 100%" frameborder="0" allow="autoplay" class="rounded-0"></iframe>'
+                    . '" style="width: 100%; height: 100%" frameborder="0" allow="autoplay" class="iv-rounded-0"></iframe>'
                     . '<script src="' . new moodle_url('/local/ivh5pupload/h5p-resizer.js') . '"></script>';
             }
         }

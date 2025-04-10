@@ -101,6 +101,7 @@ class form extends \mod_interactivevideo\form\base_form {
         $adv = parent::process_advanced_settings($data);
         $adv = json_decode($adv);
         $adv->savecurrentstate = $data->savecurrentstate;
+        $adv->dir = $data->dir;
         return json_encode($adv);
     }
 
@@ -114,7 +115,7 @@ class form extends \mod_interactivevideo\form\base_form {
 
         $this->standard_elements();
 
-        $mform->addElement('text', 'title', '<i class="bi bi-quote mr-2"></i>' . get_string('title', 'mod_interactivevideo'));
+        $mform->addElement('text', 'title', '<i class="bi bi-quote iv-mr-2"></i>' . get_string('title', 'mod_interactivevideo'));
         $mform->setType('title', PARAM_TEXT);
         $mform->setDefault('title', get_string('defaulttitle', 'mod_interactivevideo'));
         $mform->addRule('title', get_string('required'), 'required', null, 'client');
@@ -130,7 +131,7 @@ class form extends \mod_interactivevideo\form\base_form {
         $mform->addElement(
             'filemanager',
             'content',
-            '<i class="bi bi-file-zip mr-2"></i>' . get_string('h5ppackage', 'local_ivh5pupload'),
+            '<i class="bi bi-file-zip iv-mr-2"></i>' . get_string('h5ppackage', 'local_ivh5pupload'),
             null,
             $filemanageroptions
         );
@@ -167,6 +168,28 @@ class form extends \mod_interactivevideo\form\base_form {
         $this->advanced_form_fields([
             'hascompletion' => true,
         ]);
+
+        // Text direction.
+        $group = [];
+        $group[] = $mform->createElement(
+            'select',
+            'dir',
+            '',
+            [
+                '' => get_string('sitedefault', 'local_ivh5pupload'),
+                'content' => get_string('contentdefault', 'local_ivh5pupload'),
+                'ltr' => get_string('lefttoright', 'local_ivh5pupload'),
+                'rtl' => get_string('righttoleft', 'local_ivh5pupload'),
+            ]
+        );
+        $group[] = $mform->createElement(
+            'static',
+            'textdirectiondesc',
+            '',
+            '<span class="text-muted small w-100 d-block">'
+                . get_string('textdirectiondesc', 'local_ivh5pupload') . '</span>'
+        );
+        $mform->addGroup($group, '', get_string('textdirection', 'local_ivh5pupload'), null, false);
 
         // Save state.
         $groups = [];
@@ -228,7 +251,7 @@ class form extends \mod_interactivevideo\form\base_form {
         $elements[] = $mform->createElement(
             'text',
             'timeonpassing',
-            '<i class="bi bi-clock mr-2"></i>' . get_string('timeonpassing', 'ivplugin_contentbank'),
+            '<i class="bi bi-clock iv-mr-2"></i>' . get_string('timeonpassing', 'ivplugin_contentbank'),
             [
                 'size' => 25,
                 'class' => 'timestamp-input',
@@ -302,7 +325,7 @@ class form extends \mod_interactivevideo\form\base_form {
         $elements[] = $mform->createElement(
             'text',
             'timeonfailed',
-            '<i class="bi bi-clock mr-2"></i>' . get_string('timeonfailed', 'ivplugin_contentbank'),
+            '<i class="bi bi-clock iv-mr-2"></i>' . get_string('timeonfailed', 'ivplugin_contentbank'),
             [
                 'size' => 25,
                 'class' => 'timestamp-input',

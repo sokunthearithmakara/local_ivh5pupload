@@ -7,6 +7,9 @@
  */
 
 (function() {
+    if (window.h5pResizerInitialized) {
+        return; // Already initialized
+    }
     if (!window.postMessage || !window.addEventListener || window.forkedh5pResizerInitialized) {
         return; // Not supported
     }
@@ -57,6 +60,9 @@
      * @param {Function} respond Send a response to the iframe
      */
     actionHandlers.prepareResize = function(iframe, data, respond) {
+        if (window.h5pResizerInitialized) {
+            return; // Already initialized
+        }
         // Do not resize unless page and scrolling differs
         if (iframe.clientHeight !== data.scrollHeight ||
             data.scrollHeight !== data.clientHeight) {
@@ -77,7 +83,10 @@
      */
     actionHandlers.resize = function(iframe, data) {
         // Resize iframe so all content is visible. Use scrollHeight to make sure we get everything
-        iframe.style.height = (data.scrollHeight + 100) + 'px';
+        if (window.h5pResizerInitialized) {
+            return;
+        }
+        iframe.style.height = (data.scrollHeight) + 'px';
     };
 
     // Listen for messages from iframes
@@ -114,14 +123,14 @@
     }, false);
 
     // Let h5p iframes know we're ready!
-  var iframes = document.querySelectorAll('#message iframe.h5p-player');
-  var ready = {
-    context: 'h5p',
-    action: 'ready'
-  };
-  for (var i = 0; i < iframes.length; i++) {
-    if (iframes[i].src.indexOf('html') !== -1) {
-      iframes[i].contentWindow.postMessage(ready, '*');
+    var iframes = document.querySelectorAll('#message iframe.h5p-player');
+    var ready = {
+        context: 'h5p',
+        action: 'ready'
+    };
+    for (var i = 0; i < iframes.length; i++) {
+        if (iframes[i].src.indexOf('html') !== -1) {
+            iframes[i].contentWindow.postMessage(ready, '*');
+        }
     }
-  }
 })();

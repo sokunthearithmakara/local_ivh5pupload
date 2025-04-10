@@ -27,15 +27,22 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['awardpartialpoints'] = 'Award partial points';
 $string['awardpartialpoints_help'] = 'If enabled, XP will be awarded based on the percentage of the score achieved in the H5P content.';
+$string['contentdefault'] = 'Content default';
 $string['customcss'] = 'Custom CSS file';
 $string['customcssdesc'] = 'Upload a custom CSS file to style the H5P content.';
 $string['h5ppackage'] = 'H5P package';
 $string['h5puploadcontent'] = 'H5P content';
 $string['h5puploaddescription'] = 'Upload an H5P package in .html or .h5p format.';
+$string['lefttoright'] = 'Left to right';
 $string['pluginname'] = 'H5P content';
 $string['privacy:metadata'] = 'The H5P Content plugin doesn\'t store any personal data.';
+$string['righttoleft'] = 'Right to left';
+$string['sitedefault'] = 'Site default';
+$string['textdirection'] = 'Direction';
+$string['textdirectiondesc'] = 'This will set the dir attribute of the HTML tag. Not all H5P content types support RTL. You may need to set the RTL styles in the custom CSS file.';
 $string['tutorialurl'] = 'https://www.youtube.com/watch?v=44v2_QcpCEo';
 $string['usecustomcss'] = 'Use custom CSS';
 $string['usecustomcss_help'] = 'If enabled and your administrator has uploaded a custom CSS file, the H5P content will be styled using that CSS file. Otherwise, the default H5P styles in your uploaded file will be used.';
 $string['xapicheck'] = 'xAPI check';
 $string['xapieventdetected'] = 'xAPI complete event detected';
+
