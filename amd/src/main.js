@@ -287,8 +287,8 @@ export default class H5pUpload extends Base {
                                         details.timecompleted = completeTime.getTime();
                                         const completiontime = completeTime.toLocaleString();
                                         let duration = self.formatTime(details.duration / 1000);
-                                        details.reportView = `<span data${self.isBS5 ? '-bs' : ''}-toggle="tooltip"
-                                         data${self.isBS5 ? '-bs' : ''}-html="true" data${self.isBS5 ? '-bs' : ''}-title='<span
+                                        details.reportView = `<span data-toggle="tooltip"
+                                         data-html="true" data-title='<span
                                           class="d-flex flex-column align-items-start"><span><i class="bi bi-calendar iv-mr-2"></i>
                          ${completiontime}</span><span><i class="bi bi-stopwatch iv-mr-2"></i>${duration}</span>
                          <span><i class="bi bi-list-check iv-mr-2"></i>
