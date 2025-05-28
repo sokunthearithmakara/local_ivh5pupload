@@ -27,32 +27,6 @@ import {notifyFilterContentUpdated as notifyFilter} from 'core_filters/events';
 import Notification from 'core/notification';
 
 export default class H5pUpload extends Base {
-    /**
-     * Render the container for the annotation
-     * @param {Object} annotation The annotation object
-     * @returns {void}
-     */
-    renderContainer(annotation) {
-        let self = this;
-        let $message = $(`#message[data-id='${annotation.id}']`);
-        super.renderContainer(annotation);
-        if (annotation.completiontracking !== 'view') {
-            let $completiontoggle = $message.find('#completiontoggle');
-            $message.find('#title .info').remove();
-            $completiontoggle.before(`<i class="bi bi-info-circle-fill iv-mr-2 info" data${self.isBS5 ? '-bs' : ''}-toggle="tooltip"
-            data${self.isBS5 ? '-bs' : ''}-container="#wrapper" data${self.isBS5 ? '-bs' : ''}-trigger="hover"
-            title="${M.util.get_string("completionon" + annotation.completiontracking, "mod_interactivevideo")}"></i>`);
-            if (annotation.completed) {
-                return;
-            }
-            setTimeout(function() {
-                $message.find(`[data${self.isBS5 ? '-bs' : ''}-toggle="tooltip"]`).tooltip('show');
-            }, 1000);
-            setTimeout(function() {
-                $message.find(`[data${self.isBS5 ? '-bs' : ''}-toggle="tooltip"]`).tooltip('hide');
-            }, 3000);
-        }
-    }
 
     /**
      * Handles the rendering of content after an annotation is posted.
@@ -66,7 +40,9 @@ export default class H5pUpload extends Base {
      *                               otherwise returns the callback function.
      */
     postContentRender(annotation, callback) {
-        $(`#message[data-id='${annotation.id}']`).addClass('hascontentbank overflow-hidden');
+        let self = this;
+        let $message = $(`#message[data-id='${annotation.id}']`);
+        $message.addClass('hascontentbank overflow-hidden');
         // Get customcss link from the annotation prop.
         let prop = JSON.parse(annotation.prop);
         let customcss = prop.customcss;
@@ -128,6 +104,19 @@ export default class H5pUpload extends Base {
             }
         };
         requestAnimationFrame(checkIframe);
+        if (annotation.completiontracking !== 'view') {
+            let $completiontoggle = $message.find('#completiontoggle');
+            $message.find('#title .info').remove();
+            $completiontoggle.before(`<i class="bi bi-info-circle-fill iv-mr-2 info" data${self.isBS5 ? '-bs' : ''}-toggle="tooltip"
+            data${self.isBS5 ? '-bs' : ''}-container="#message" data${self.isBS5 ? '-bs' : ''}-trigger="hover"
+            title="${M.util.get_string("completionon" + annotation.completiontracking, "mod_interactivevideo")}"></i>`);
+            if (!annotation.completed) {
+                $message.find(`#title [data${self.isBS5 ? '-bs' : ''}-toggle="tooltip"]`).tooltip('show');
+                setTimeout(function() {
+                    $message.find(`#title [data${self.isBS5 ? '-bs' : ''}-toggle="tooltip"]`).tooltip('hide');
+                }, 2000);
+            }
+        }
         if (annotation.hascompletion == 1 && annotation.completiontracking == 'manual'
             && !annotation.completed && annotation.completiontracking != 'view') {
             return callback;
@@ -178,9 +167,8 @@ export default class H5pUpload extends Base {
         $(document).off('click', '#passfail').on('click', '#passfail', function(e) {
             e.preventDefault();
             let time = $(this).data('timestamp');
-            self.dispatchEvent('interactionclose', {
-                annotation: annotation,
-            });
+            // Trigger close button.
+            $message.find('.interaction-dismiss').trigger('click');
             self.player.seek(time);
             self.player.play();
             $(this).remove();
@@ -309,9 +297,8 @@ export default class H5pUpload extends Base {
                                                 onPassFail(false, condition.timeonfailed);
                                             } else if (condition.gotoonfailed == 1 && condition.forceonfailed == 1) {
                                                 setTimeout(function() {
-                                                    self.dispatchEvent('interactionclose', {
-                                                        annotation: annotation,
-                                                    });
+                                                    // Trigger close button.
+                                                    $message.find('.interaction-dismiss').trigger('click');
                                                     self.player.seek(condition.timeonfailed);
                                                     self.player.play();
                                                 }, 1000);
@@ -329,9 +316,8 @@ export default class H5pUpload extends Base {
                                                 onPassFail(true, condition.timeonpassing);
                                             } else if (condition.gotoonpassing == 1 && condition.forceonpassing == 1) {
                                                 setTimeout(function() {
-                                                    self.dispatchEvent('interactionclose', {
-                                                        annotation: annotation,
-                                                    });
+                                                    // Trigger close button.
+                                                    $message.find('.interaction-dismiss').trigger('click');
                                                     self.player.seek(condition.timeonpassing);
                                                     self.player.play();
                                                 }, 1000);
