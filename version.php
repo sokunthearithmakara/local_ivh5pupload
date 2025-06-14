@@ -25,8 +25,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component    = 'local_ivh5pupload';
-$plugin->release      = '1.1';
-$plugin->version      = 2025041100;
+$plugin->release      = '1.2';
+$plugin->version      = 2025051100;
 $plugin->requires     = 2021112800;
 $plugin->supported    = [400, 500];
 $plugin->maturity     = MATURITY_STABLE;

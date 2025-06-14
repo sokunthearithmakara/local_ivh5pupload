@@ -364,8 +364,10 @@ export default class H5pUpload extends Base {
             }
 
             // If annotation is incomplete, we want to save the state when the interaction is closed.
-            $(document).on('interactionclose interactionrefresh', async function(e) {
-                if (!annotation.completed && firstview && saveState == 1) {
+            if (!annotation.completed && firstview && saveState == 1) {
+                let namespace = annotation.id;
+                let eventName = `interactionclose.${namespace} interactionrefresh.${namespace}`;
+                $(document).off(eventName).on(eventName, async function(e) {
                     if (e.detail.annotation.id == annotation.id) {
                         try {
                             let content = window.H5PIntegration.contents;
@@ -380,9 +382,8 @@ export default class H5pUpload extends Base {
                             window.console.log('Error: ', e);
                         }
                     }
-                }
-                // Remove window.
-            });
+                });
+            }
 
             if (annotation.hascompletion != 1) {
                 return;
