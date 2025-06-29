@@ -271,6 +271,7 @@ export default class H5pUpload extends Base {
                                         if (annotation.char1 == '1') { // Partial points.
                                             details.xp = (result.score.scaled * annotation.xp).toFixed(2);
                                         }
+                                        details.percent = details.xp / annotation.xp;
                                         details.duration = windowAnno.duration + (completeTime.getTime() - windowAnno.newstarttime);
                                         details.timecompleted = completeTime.getTime();
                                         const completiontime = completeTime.toLocaleString();
