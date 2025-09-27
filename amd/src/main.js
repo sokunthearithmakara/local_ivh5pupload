@@ -159,7 +159,7 @@ export default class H5pUpload extends Base {
             $message.find('#content')
                 .append(`<button class="btn btn-${passed ? 'success' : 'danger'} mt-2 btn-rounded"
                         id="passfail" data-timestamp="${time}"><i class="fa fa-${passed ? 'play' : 'redo'} iv-mr-2"></i>
-                    ${M.util.get_string(label, 'ivplugin_contentbank')}
+                    ${M.util.get_string(label, 'local_ivh5pupload')}
                     </button>`);
             $message.find('iframe').addClass('no-pointer-events');
         };
@@ -419,9 +419,9 @@ export default class H5pUpload extends Base {
             // Show a confirmation message if the state is not empty.
             if (log !== '' && log !== null) {
                 Notification.saveCancel(
-                    M.util.get_string('resume', 'ivplugin_contentbank'),
-                    M.util.get_string('resumeconfirm', 'ivplugin_contentbank'),
-                    M.util.get_string('resume', 'ivplugin_contentbank'),
+                    M.util.get_string('resume', 'local_ivh5pupload'),
+                    M.util.get_string('resumeconfirm', 'local_ivh5pupload'),
+                    M.util.get_string('resume', 'local_ivh5pupload'),
                     function() {
                         // Do nothing.
                         afterLog(log);

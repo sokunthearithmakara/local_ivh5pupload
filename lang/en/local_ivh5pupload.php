@@ -45,4 +45,7 @@ $string['usecustomcss'] = 'Use custom CSS';
 $string['usecustomcss_help'] = 'If enabled and your administrator has uploaded a custom CSS file, the H5P content will be styled using that CSS file. Otherwise, the default H5P styles in your uploaded file will be used.';
 $string['xapicheck'] = 'xAPI check';
 $string['xapieventdetected'] = 'xAPI complete event detected';
-
+$string['continue'] = 'Continue';
+$string['rewatch'] = 'Rewatch';
+$string['resume'] = 'Resume';
+$string['resumeconfirm'] = 'You have attempted this interaction before. Do you want to resume from the last time you left off?';
