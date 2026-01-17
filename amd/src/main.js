@@ -25,6 +25,7 @@ import $ from 'jquery';
 import Base from 'mod_interactivevideo/type/base';
 import {notifyFilterContentUpdated as notifyFilter} from 'core_filters/events';
 import Notification from 'core/notification';
+import {get_string as getString} from 'core/str';
 
 export default class H5pUpload extends Base {
 
@@ -39,7 +40,7 @@ export default class H5pUpload extends Base {
      * @returns {boolean|Function} - Returns true if the annotation does not require manual completion tracking,
      *                               otherwise returns the callback function.
      */
-    postContentRender(annotation, callback) {
+    async postContentRender(annotation, callback) {
         let self = this;
         let $message = $(`#message[data-id='${annotation.id}']`);
         $message.addClass('hascontentbank overflow-hidden');
@@ -113,7 +114,7 @@ export default class H5pUpload extends Base {
                     ${tooltipAttr}-placement="auto"
                     ${tooltipAttr}-container="#message"
                     ${tooltipAttr}-trigger="hover"
-                    title="${M.util.get_string("completionon" + annotation.completiontracking, "mod_interactivevideo")}">
+                    title="${await getString("completionon" + annotation.completiontracking, "mod_interactivevideo")}">
                 </i>`
             );
 
@@ -165,7 +166,7 @@ export default class H5pUpload extends Base {
             $message.find('#content')
                 .append(`<button class="btn btn-${passed ? 'success' : 'danger'} mt-2 btn-rounded"
                         id="passfail" data-timestamp="${time}"><i class="fa fa-${passed ? 'play' : 'redo'} iv-mr-2"></i>
-                    ${M.util.get_string(label, 'local_ivh5pupload')}
+                    ${await getString(label, 'local_ivh5pupload')}
                     </button>`);
             $message.find('iframe').addClass('no-pointer-events');
         };
@@ -192,7 +193,7 @@ export default class H5pUpload extends Base {
 
         const afterLog = async(log) => {
             const xAPICheck = (annotation) => {
-                const detectH5P = () => {
+                const detectH5P = async() => {
                     let H5P;
                     try { // Try to get the H5P object.
                         H5P = document.querySelector(`#message[data-id='${annoid}'] iframe`).contentWindow.H5P;
@@ -214,7 +215,7 @@ export default class H5pUpload extends Base {
                             $message.find(`#title .btns .xapi`).remove();
                             $message.find(`#title .btns`)
                                 .prepend(`<div class="xapi alert-secondary px-2
-                             rounded-pill">${M.util.get_string('xapicheck', 'ivplugin_contentbank')}</div>`);
+                             rounded-pill">${await getString('xapicheck', 'ivplugin_contentbank')}</div>`);
                         }
 
                         window.H5PIntegration = document.querySelector(`#message[data-id='${annoid}'] iframe`)
@@ -245,7 +246,7 @@ export default class H5pUpload extends Base {
                                         $(`#message[data-id='${annotation.id}'] #title .btns`)
                                             .prepend(`<div class="xapi alert-success d-inline px-2 rounded-pill">
                                                         <i class="fa fa-check iv-mr-2"></i>
-                                                        ${M.util.get_string('xapieventdetected', 'ivplugin_contentbank')}
+                                                        ${await getString('xapieventdetected', 'ivplugin_contentbank')}
                                                     </div>`);
                                         const audio = new Audio(M.cfg.wwwroot + '/mod/interactivevideo/sounds/pop.mp3');
                                         audio.play();
@@ -425,9 +426,9 @@ export default class H5pUpload extends Base {
             // Show a confirmation message if the state is not empty.
             if (log !== '' && log !== null) {
                 Notification.saveCancel(
-                    M.util.get_string('resume', 'local_ivh5pupload'),
-                    M.util.get_string('resumeconfirm', 'local_ivh5pupload'),
-                    M.util.get_string('resume', 'local_ivh5pupload'),
+                    await getString('resume', 'local_ivh5pupload'),
+                    await getString('resumeconfirm', 'local_ivh5pupload'),
+                    await getString('resume', 'local_ivh5pupload'),
                     function() {
                         // Do nothing.
                         afterLog(log);

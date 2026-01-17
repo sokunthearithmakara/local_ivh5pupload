@@ -65,6 +65,7 @@ class main extends \ivplugin_richtext\main {
             'authorlink' => 'mailto:sokunthearithmakara@gmail.com',
             'tutorial' => get_string('tutorialurl', 'local_ivh5pupload'),
             'customcss' => $customcss,
+            'preloadstrings' => false,
         ];
     }
 
