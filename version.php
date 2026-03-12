@@ -25,12 +25,12 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component    = 'local_ivh5pupload';
-$plugin->release      = '1.3';
-$plugin->version      = 2026011600;
+$plugin->release      = '1.4';
+$plugin->version      = 2026030900;
 $plugin->requires     = 2021112800;
 $plugin->supported    = [400, 501];
 $plugin->maturity     = MATURITY_STABLE;
 $plugin->dependencies = [
-    'interactivevideo' => 2025011305,
+    'interactivevideo' => 2026030400,
     'ivplugin_richtext' => 2024071500,
 ];
