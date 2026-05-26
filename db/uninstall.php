@@ -15,23 +15,28 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * TODO describe file uninstall
+ * Uninstall script for h5pupload.
  *
  * @package    local_ivh5pupload
  * @copyright  2024 Sokunthearith Makara <sokunthearithmakara@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 /**
  * Uninstall function for the local_ivh5pupload plugin.
  *
  * @return bool Always returns true.
  */
 function xmldb_local_ivh5pupload_uninstall() {
-    $config = get_config('mod_interactivevideo', 'enablecontenttypes');
-    $config = explode(',', $config);
+    $config = array_filter(explode(',', get_config('mod_interactivevideo', 'enablecontenttypes') ?: ''));
     $config = array_diff($config, ['local_ivh5pupload']);
-    // Save the new configuration.
     set_config('enablecontenttypes', implode(',', $config), 'mod_interactivevideo');
+
+    if (get_config('mod_flexbook', 'version')) {
+        $config = array_filter(explode(',', get_config('mod_flexbook', 'enablecontenttypes') ?: ''));
+        $config = array_diff($config, ['local_ivh5pupload']);
+        set_config('enablecontenttypes', implode(',', $config), 'mod_flexbook');
+    }
 
     return true;
 }

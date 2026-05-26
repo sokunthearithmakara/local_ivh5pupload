@@ -29,30 +29,8 @@ class form extends \mod_interactivevideo\form\base_form {
      * @return void
      */
     public function set_data_for_dynamic_submission(): void {
-        global $CFG;
-
         $data = $this->set_data_default();
-
-        $conditionaltime = json_decode($data->text1, true);
-        $data->gotoonpassing = $conditionaltime['gotoonpassing'];
-        $data->forceonpassing = $conditionaltime['forceonpassing'];
-        $data->timeonpassing = date('H:i:s', strtotime('TODAY') + $conditionaltime['timeonpassing']);
-        $data->gotoonfailed = $conditionaltime['gotoonfailed'];
-        $data->forceonfailed = $conditionaltime['forceonfailed'];
-        $data->timeonfailed = date('H:i:s', strtotime('TODAY') + $conditionaltime['timeonfailed']);
-        $data->showtextonpassing = $conditionaltime['showtextonpassing'];
-        $data->textonpassing = $conditionaltime['textonpassing'];
-        $data->showtextonfailed = $conditionaltime['showtextonfailed'];
-        $data->textonfailed = $conditionaltime['textonfailed'];
-
-        require_once($CFG->libdir . '/filelib.php');
-
-        // Load the file in the draft area. mod_interactive, content.
-        $draftitemid = file_get_submitted_draft_itemid('content');
-        file_prepare_draft_area($draftitemid, $data->contextid, 'mod_interactivevideo', 'content', $data->id);
-
-        $data->content = $draftitemid;
-
+        $data = \local_ivh5pupload\helper::prepare_h5pupload_data($data, 'mod_interactivevideo');
         $this->set_data($data);
     }
 
@@ -136,6 +114,23 @@ class form extends \mod_interactivevideo\form\base_form {
             $filemanageroptions
         );
         $mform->addRule('content', get_string('required'), 'required', null, 'client');
+
+        // Translation files.
+        $translationoptions = [
+            'maxbytes'       => 0,
+            'subdirs'        => 0,
+            'maxfiles'       => 20,
+            'accepted_types' => ['.json'],
+        ];
+
+        $mform->addElement(
+            'filemanager',
+            'text2',
+            '<i class="bi bi-translate iv-mr-2"></i>' . get_string('translationfiles', 'local_ivh5pupload'),
+            null,
+            $translationoptions
+        );
+        $mform->addHelpButton('text2', 'translationfiles', 'local_ivh5pupload');
 
         // Option to use custom CSS.
         $mform->addElement('advcheckbox', 'char2', '', get_string('usecustomcss', 'local_ivh5pupload'), null, [0, 1]);
@@ -379,41 +374,7 @@ class form extends \mod_interactivevideo\form\base_form {
      */
     public function process_dynamic_submission() {
         $fromform = parent::process_dynamic_submission();
-        $draftitemid = $fromform->content;
-        file_save_draft_area_files(
-            $draftitemid,
-            $fromform->contextid,
-            'mod_interactivevideo',
-            'content',
-            $fromform->id,
-        );
-
-        // Get file content, edit its H5PIntegration object, and save it back if the file is html.
-        $fs = get_file_storage();
-        $file = $fs->get_area_files($fromform->contextid, 'mod_interactivevideo', 'content', $fromform->id, 'id DESC', false);
-        $file = reset($file);
-        if ($file) {
-            $mimetype = $file->get_mimetype();
-            if ($mimetype !== 'text/html') {
-                return $fromform;
-            }
-            $content = $file->get_content();
-            $content = str_replace('H5PIntegration = {"ajax"', 'H5PIntegration = {"reportingIsEnabled": true, "ajax"', $content);
-
-            // Save the file back.
-            $fileinfo = [
-                'contextid' => $fromform->contextid,
-                'component' => 'mod_interactivevideo',
-                'filearea' => 'content',
-                'itemid' => $fromform->id,
-                'filepath' => '/',
-                'filename' => $file->get_filename(),
-            ];
-
-            $file->delete();
-            $file = $fs->create_file_from_string($fileinfo, $content);
-        }
-
+        \local_ivh5pupload\helper::save_h5pupload_data($fromform, 'mod_interactivevideo');
         return $fromform;
     }
 }

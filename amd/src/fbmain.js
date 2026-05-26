@@ -1,4 +1,5 @@
 /* eslint-disable complexity */
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,33 +16,40 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Main class for the H5P Upload plugin.
+ * Main class for the H5P Upload plugin in Flexbook.
  *
- * @module     local_ivh5pupload/main
+ * @module     local_ivh5pupload/fbmain
  * @copyright  2026 Sokunthearith Makara <sokunthearithmakara@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 import $ from 'jquery';
-import Base from 'mod_interactivevideo/type/base';
-import {notifyFilterContentUpdated as notifyFilter} from 'core_filters/events';
+import Base from 'mod_flexbook/type/base';
 import Notification from 'core/notification';
 import {get_string as getString} from 'core/str';
+import state from 'mod_flexbook/state';
+import {safeParse} from 'mod_flexbook/utils';
 import utils from 'local_ivh5pupload/utils';
 
 export default class H5pUpload extends Base {
-
     /**
-     * Handles the rendering of content after an annotation is posted.
-     *
-     * @param {Object} annotation - The annotation object containing details about the annotation.
-     * @param {Function} callback - The callback function to be executed if certain conditions are met.
-     * @returns {boolean|Function} - Returns true if the annotation does not require manual completion tracking,
-     *                               otherwise returns the callback function.
+     * Creates an instance of the class.
+     * @param {Array} annotations The annotations object
+     * @param {Object} properties Properties of the interaction type
      */
-    async postContentRender(annotation, callback) {
-        let $message = $(`#message[data-id='${annotation.id}']`);
-        $message.addClass('hascontentbank overflow-hidden');
-        return utils.postContentRender(this, annotation, $message, callback);
+    constructor(annotations, properties) {
+        super(annotations, properties);
+        $(document).on('interactionrun', (e) => {
+            const annotation = e.originalEvent.detail.annotation;
+            if (annotation.type === 'h5pupload') {
+                setTimeout(() => {
+                    window.dispatchEvent(new Event('resize'));
+                    const iframe = document.querySelector(`#message[data-id='${annotation.id}'] iframe`);
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.dispatchEvent(new Event('resize'));
+                    }
+                }, 1000);
+            }
+        });
     }
 
     /**
@@ -51,73 +59,53 @@ export default class H5pUpload extends Base {
      * @return {void}
      */
     onEditFormLoaded(form, event) {
-        let self = this;
-        self.timepicker({
-            required: true,
-        });
-
         return {form, event};
     }
 
+    /** @override */
+    async postContentRender(annotation, $message, callback) {
+        $message.addClass('hascontentbank');
+        return utils.postContentRender(this, annotation, $message, callback);
+    }
+
     /**
-     * Apply the content to the annotation
-     * @param {Object} annotation The annotation object
-     * @param {Object} existingstate The existing state of the annotation
-     * @returns {Promise<void>} - Returns a promise that resolves when the content is applied.
-     * @override
+     * Resizes the iframe.
+     * @param {Object} annotation - The annotation object containing the id.
      */
-    async applyContent(annotation, existingstate) {
+    resizeIframe(annotation) {
+        utils.resizeIframe(annotation);
+    }
+
+    /** @override */
+    async applyContent(annotation, $message = null, existingstate = null) {
         let self = this;
-        let $message = $(`#message[data-id='${annotation.id}']`);
+        if (!$message) {
+            $message = $(`#message[data-id='${annotation.id}']`);
+        }
+
         // Remove .modal-dialog-centered class to avoid flickering when H5P content resizes.
         $message.removeClass('modal-dialog-centered');
 
         let annoid = annotation.id;
 
-        const onPassFail = async(passed, time) => {
-            let label = passed ? 'continue' : 'rewatch';
-            $message.find('#content')
-                .append(`<button class="btn btn-${passed ? 'success' : 'danger'} mt-2 btn-rounded"
-                        id="passfail" data-timestamp="${time}"><i class="fa fa-${passed ? 'play' : 'redo'} iv-mr-2"></i>
-                    ${await getString(label, 'local_ivh5pupload')}
-                    </button>`);
-            $message.find('iframe').addClass('no-pointer-events');
-        };
-
-        $(document).off('click', '#passfail').on('click', '#passfail', function(e) {
-            e.preventDefault();
-            let time = $(this).data('timestamp');
-            // Trigger close button.
-            $message.find('.interaction-dismiss').addClass('force-dismiss').trigger('click');
-            self.player.seek(time);
-            self.player.play();
-            $(this).remove();
-        });
-
-        let saveState = 0;
-        let condition = null;
-        if (annotation.text1 != '' && annotation.text1 !== null) {
-            try {
-                condition = JSON.parse(annotation.text1);
-            } catch (e) {
-                condition = null;
-            }
-        }
-
-        let advanced = {};
-        try {
-            advanced = JSON.parse(annotation.advanced || '{}');
-        } catch (e) {
-            advanced = {};
-        }
-        if (advanced.savecurrentstate == 1) {
-            saveState = 1;
-        }
+        const advanced = safeParse(annotation.advanced, {});
+        const saveState = advanced.savecurrentstate == 1 ? 1 : 0;
 
         const afterLog = async(log) => {
             const xAPICheck = (annotation) => {
-                utils.initH5PIntegration(self, annotation, $message, log, saveState, null, async(statement, H5PIntegration, id) => {
-                    if (annotation.completed && !condition) {
+                utils.initH5PIntegration(self, annotation, $message, log, saveState, state,
+                    async(statement, H5PIntegration, id) => {
+                    if (!self.isEditMode() && state.isMascotActive
+                        && statement.verb.id == 'http://adlnet.gov/expapi/verbs/answered') {
+                        // Get the score result
+                        let result = statement.result;
+                        if (result && result.success === true) {
+                            self.dispatchEvent('iv:correct');
+                        } else if (result && result.success === false) {
+                            self.dispatchEvent('iv:incorrect');
+                        }
+                    }
+                    if (annotation.completed) {
                         return;
                     }
                     if ((statement.verb.id == 'http://adlnet.gov/expapi/verbs/completed'
@@ -125,20 +113,22 @@ export default class H5pUpload extends Base {
                         && statement.object.id.indexOf('subContentId') < 0
                         && !statement.context.contextActivities.parent) {
                         if (self.isEditMode()) {
-                            $message.find(`#title .btns .xapi`).remove();
-                            $message.find(`#title .btns`)
-                                .prepend(`<div class="xapi alert-success d-inline px-2 rounded-pill">
-                                            <i class="fa fa-check iv-mr-2"></i>
-                                            ${await getString('xapieventdetected', 'local_ivh5pupload')}
+                            $(`#message[data-id='${annotation.id}'] #title .btns .xapi`).remove();
+                            $(`#message[data-id='${annotation.id}'] #title .btns`)
+                                .prepend(`<div class="xapi alert-success d-inline px-2 iv-rounded-pill">
+                                        <i class="fa fa-check iv-mr-2"></i>
+                                        ${await getString('xapieventdetected', 'local_ivh5pupload')}
                                         </div>`);
-                            const audio = new Audio(M.cfg.wwwroot + '/mod/interactivevideo/sounds/pop.mp3');
-                            audio.play();
+                            if (state.audio && state.audio.pop) {
+                                state.audio.pop.play();
+                            }
                             return;
                         }
                         let complete = false;
                         let textclass = '';
                         let result = statement.result;
-                        if (annotation.completiontracking == 'completepass' && result && result.score.scaled >= 0.5) {
+                        if (annotation.completiontracking == 'completepass'
+                            && result && result.score.scaled >= 0.5) {
                             complete = true;
                         } else if (annotation.completiontracking == 'completefull'
                             && result && result.score.scaled == 1) {
@@ -156,16 +146,15 @@ export default class H5pUpload extends Base {
                         if (complete && !annotation.completed) {
                             let details = {};
                             const completeTime = new Date();
-                            let windowAnno = window.ANNOS.find(x => x.id == annotation.id);
                             details.xp = annotation.xp;
                             if (annotation.char1 == '1') { // Partial points.
                                 details.xp = (result.score.scaled * annotation.xp).toFixed(2);
                             }
                             details.percent = details.xp / annotation.xp;
-                            details.duration = windowAnno.duration + (completeTime.getTime() - windowAnno.newstarttime);
+                            details.duration = state.getTimespent ? await state.getTimespent(annotation.id) : 0;
                             details.timecompleted = completeTime.getTime();
                             const completiontime = completeTime.toLocaleString();
-                            let duration = self.formatTime(details.duration / 1000);
+                            let duration = await self.formatTime(details.duration / 1000);
                             details.reportView = '##' + completiontime + "|"
                                 + duration + "|"
                                 + result.score.raw + "/" + result.score.max + "|"
@@ -179,64 +168,31 @@ export default class H5pUpload extends Base {
                             // Must wait 1.5 seconds or so to let the saveState finish.
                             // Otherwise, the completion will be incomplete.
                             setTimeout(function() {
-                                if (annotation.completed) {
-                                    return;
-                                }
                                 self.toggleCompletion(annoid, 'mark-done', 'automatic', details);
                             }, 1500);
                         }
 
-                        if (condition !== null) {
-                            if (result.score.scaled < 0.5) {
-                                if (condition.gotoonfailed == 1 && condition.forceonfailed != 1) {
-                                    onPassFail(false, condition.timeonfailed);
-                                } else if (condition.gotoonfailed == 1 && condition.forceonfailed == 1) {
-                                    setTimeout(function() {
-                                        // Trigger close button.
-                                        $message.find('.interaction-dismiss').addClass('force-dismiss')
-                                            .trigger('click');
-                                        self.player.seek(condition.timeonfailed);
-                                        self.player.play();
-                                    }, 1000);
-                                }
-                                if (condition.showtextonfailed == 1 && condition.textonfailed.text != '') {
-                                    let textonfailed = await self.formatContent(condition.textonfailed.text);
-                                    $message.find('.passfail-message').remove();
-                                    $message.find(`#content`)
-                                        .prepend(`<div class="alert bg-secondary mt-2 mx-3 passfail-message">
-                                    ${textonfailed}</div>`);
-                                    notifyFilter($('.passfail-message'));
-                                }
-                            } else {
-                                if (condition.gotoonpassing == 1 && condition.forceonpassing != 1) {
-                                    onPassFail(true, condition.timeonpassing);
-                                } else if (condition.gotoonpassing == 1 && condition.forceonpassing == 1) {
-                                    setTimeout(function() {
-                                        // Trigger close button.
-                                        $message.find('.interaction-dismiss').addClass('force-dismiss')
-                                            .trigger('click');
-                                        self.player.seek(condition.timeonpassing);
-                                        self.player.play();
-                                    }, 1000);
-                                }
-                                if (condition.showtextonpassing == 1 && condition.textonpassing.text != '') {
-                                    let textonpassing = await self.formatContent(condition.textonpassing.text);
-                                    $message.find('.passfail-message').remove();
-                                    $message.find(`#content`)
-                                        .prepend(`<div class="alert bg-secondary mt-2 mx-3 passfail-message">
-                                    ${textonpassing}</div>`);
-                                    notifyFilter($('.passfail-message'));
-                                }
+                        const advancedAction = safeParse(annotation.advanced, {});
+                        if (result.score.scaled < 0.5) {
+                            if (advancedAction.jumptofail) {
+                                setTimeout(function() {
+                                    state.navigateToAnnotation(advancedAction.jumptofail, true);
+                                }, 1000);
+                            }
+                        } else {
+                            if (advancedAction.jumptopass) {
+                                setTimeout(function() {
+                                    state.navigateToAnnotation(advancedAction.jumptopass, true);
+                                }, 1000);
                             }
                         }
                     }
                 });
             };
+
             // We don't need to run the render method every time the content is applied. We can cache the content.
-            let firstview = false;
             if (!self.cache[annotation.id] || self.isEditMode()) {
                 self.cache[annotation.id] = await self.render(annotation);
-                firstview = true;
             }
             const data = self.cache[annotation.id];
 
@@ -293,7 +249,7 @@ export default class H5pUpload extends Base {
                 });
             }
 
-            self.postContentRender(annotation, xAPICheck(annotation));
+            self.postContentRender(annotation, $message, xAPICheck(annotation));
 
             if (existingstate !== null && existingstate !== undefined) {
                 return;
@@ -304,9 +260,9 @@ export default class H5pUpload extends Base {
             }
 
             // If annotation is incomplete, we want to save the state when the interaction is closed.
-            if (!annotation.completed && firstview && saveState == 1) {
+            if (!annotation.completed && saveState == 1) {
                 let namespace = annotation.id;
-                let eventName = `interactionclose.${namespace} interactionrefresh.${namespace}`;
+                let eventName = `interactionclose.${namespace} interactionrefresh.${namespace}`; // Use a unique namespace.
                 $(document).off(eventName).on(eventName, async function(e) {
                     if (e.detail.annotation.id == annotation.id) {
                         try {
@@ -316,19 +272,18 @@ export default class H5pUpload extends Base {
                                 let content = H5PIntegration.contents;
                                 let id = Object.keys(content)[0];
                                 let contentuserData = H5PIntegration.contents[id].contentUserData[0];
-                                let state = contentuserData.state;
+                                let cstate = contentuserData.state;
                                 await self.saveLog(annotation, {
-                                    text1: JSON.stringify(state),
+                                    text1: JSON.stringify(cstate),
                                     char1: annotation.type,
                                 }, self.userid, true);
                             }
                         } catch (e) {
-                            window.console.log('Error: ', e);
+                            //
                         }
                     }
                 });
             }
-
             if (annotation.hascompletion != 1) {
                 return;
             }
@@ -352,6 +307,7 @@ export default class H5pUpload extends Base {
             return;
         }
         let logs = await self.getLogs(annotation, [self.userid]);
+
         let log = '';
         if (logs.length <= 0) {
             afterLog('');
@@ -363,6 +319,7 @@ export default class H5pUpload extends Base {
             } catch (e) {
                 log = '';
             }
+
             // Show a confirmation message if the state is not empty.
             if (log !== '' && log !== null) {
                 Notification.saveCancel(
@@ -373,8 +330,7 @@ export default class H5pUpload extends Base {
                         afterLog(log);
                     },
                     function() {
-                        log = '';
-                        afterLog(log);
+                        afterLog('');
                     }
                 );
             } else {
@@ -383,6 +339,7 @@ export default class H5pUpload extends Base {
         }
     }
 
+    /** @override */
     async getCompletionData(annotation, userid) {
         let logs = await this.getLogs(annotation, [userid]);
         let log = '';
@@ -396,9 +353,7 @@ export default class H5pUpload extends Base {
         annotation.displayoptions = 'popup';
         annotation.hascompletion = 0;
         annotation.completed = true;
-        await this.renderViewer(annotation);
-        this.renderContainer(annotation);
-        this.applyContent(annotation, log);
+        this.previewInteraction(annotation, log);
         return log;
     }
 

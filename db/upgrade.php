@@ -15,9 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Install script for h5pupload
- *
- * Documentation: {@link https://moodledev.io/docs/guides/upgrade}
+ * Upgrade script for h5pupload.
  *
  * @package    local_ivh5pupload
  * @copyright  2024 Sokunthearith Makara <sokunthearithmakara@gmail.com>
@@ -25,19 +23,20 @@
  */
 
 /**
- * Executed on installation of h5pupload
+ * Upgrade callback for local_ivh5pupload.
  *
+ * @param int $oldversion The currently installed version.
  * @return bool
  */
-function xmldb_local_ivh5pupload_install() {
-    $config = array_filter(explode(',', get_config('mod_interactivevideo', 'enablecontenttypes') ?: ''));
-    $config[] = 'local_ivh5pupload';
-    set_config('enablecontenttypes', implode(',', array_unique($config)), 'mod_interactivevideo');
+function xmldb_local_ivh5pupload_upgrade($oldversion) {
+    if ($oldversion < 2026052600) {
+        if (get_config('mod_flexbook', 'version')) {
+            $config = array_filter(explode(',', get_config('mod_flexbook', 'enablecontenttypes') ?: ''));
+            $config[] = 'local_ivh5pupload';
+            set_config('enablecontenttypes', implode(',', array_unique($config)), 'mod_flexbook');
+        }
 
-    if (get_config('mod_flexbook', 'version')) {
-        $config = array_filter(explode(',', get_config('mod_flexbook', 'enablecontenttypes') ?: ''));
-        $config[] = 'local_ivh5pupload';
-        set_config('enablecontenttypes', implode(',', array_unique($config)), 'mod_flexbook');
+        upgrade_plugin_savepoint(true, 2026052600, 'local', 'ivh5pupload');
     }
 
     return true;

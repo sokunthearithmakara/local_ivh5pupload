@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- Shadow Group (shifted down 1.5px, merges all elements into a single drop shadow) -->
+  <g transform="translate(0, 1.5)" fill="#00332A">
+    <!-- Back Flap -->
+    <path d="M3 9 L5 5 H19 L21 9 Z" />
+    <!-- Media Player -->
+    <rect x="5.5" y="4" width="8" height="7" rx="1" />
+    <!-- Toggle List -->
+    <rect x="12.5" y="3" width="6" height="8" rx="1" />
+    <!-- Box Front -->
+    <path d="M3 9 H21 V19 A2 2 0 0 1 19 21 H5 A2 2 0 0 1 3 19 Z" />
+  </g>
+
+  <!-- Back Flap (leaning backward away from viewer) -->
+  <path d="M3 9 L5 5 H19 L21 9 Z" fill="#004D40"/>
+
+  <!-- Elements packed inside the box -->
+  <!-- 1. Media Player Screen -->
+  <rect x="5.5" y="4" width="8" height="7" rx="1" fill="#4DB6AC"/>
+  <!-- Glassy diagonal highlight on the screen -->
+  <polygon points="5.5,4 10,4 5.5,8.5" fill="white" opacity="0.15"/>
+  <!-- Play button -->
+  <polygon points="8.5,5.5 11.5,7 8.5,8.5" fill="#ffffff"/>
+
+  <!-- 2. Interactive Toggle List -->
+  <rect x="12.5" y="3" width="6" height="8" rx="1" fill="#B2DFDB"/>
+  <!-- Active Toggle -->
+  <rect x="13.5" y="4" width="4" height="2" rx="1" fill="#00897B"/>
+  <circle cx="16" cy="5" r="0.6" fill="#ffffff"/>
+  <!-- Inactive Toggle -->
+  <rect x="13.5" y="7" width="4" height="2" rx="1" fill="#80CBC4"/>
+  <circle cx="14.5" cy="8" r="0.6" fill="#ffffff"/>
+
+  <!-- Box Front (covers the bottom half of the packed elements) -->
+  <path d="M3 9 H21 V19 A2 2 0 0 1 19 21 H5 A2 2 0 0 1 3 19 Z" fill="#00897B"/>
+  
+  <!-- Left edge subtle highlight on the box -->
+  <rect x="4" y="9.5" width="0.8" height="10" rx="0.4" fill="white" opacity="0.15"/>
+
+  <!-- Front Flap (folded down over the front) -->
+  <path d="M3 9 L6 14 H18 L21 9 Z" fill="#00695C"/>
+  <!-- Fold crease highlight -->
+  <line x1="3.5" y1="9.5" x2="20.5" y2="9.5" stroke="white" stroke-width="0.8" stroke-linecap="round" opacity="0.2"/>
+</svg>

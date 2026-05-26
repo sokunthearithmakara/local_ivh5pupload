@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Callback implementations for form
+ * Callback implementations for h5pupload.
  *
  * @package    local_ivh5pupload
  * @copyright  2024 Sokunthearith Makara <sokunthearithmakara@gmail.com>
@@ -28,6 +28,18 @@
  * @return array Plugin information.
  */
 function local_ivh5pupload_ivplugin() {
+    return [
+        'class' => 'local_ivh5pupload\\main',
+        'name' => 'h5pupload',
+    ];
+}
+
+/**
+ * Provides plugin information for ivh5pupload in Flexbook.
+ *
+ * @return array Plugin information.
+ */
+function local_ivh5pupload_fbplugin() {
     return [
         'class' => 'local_ivh5pupload\\main',
         'name' => 'h5pupload',
@@ -56,13 +68,10 @@ function local_ivh5pupload_pluginfile($course, $cm, $context, $filearea, $args, 
     } else {
         $filepath = '/' . implode('/', $args) . '/';
     }
-    // Retrieve the file from the Files API.
-    $fs = get_file_storage();
     $file = $fs->get_file($context->id, 'local_ivh5pupload', $filearea, $itemid, $filepath, $filename);
     if (!$file) {
         send_file_not_found();
     }
 
-    // Finally send the file.
     send_stored_file($file, 0, 0, $forcedownload, $options);
 }
