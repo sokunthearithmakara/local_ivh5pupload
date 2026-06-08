@@ -28,7 +28,22 @@ import Notification from 'core/notification';
 import {get_string as getString} from 'core/str';
 import state from 'mod_flexbook/state';
 import {safeParse} from 'mod_flexbook/utils';
-import utils from 'local_ivh5pupload/utils';
+import utils, {removeDownloadStringsButton} from 'local_ivh5pupload/utils';
+
+/**
+ * Tear down Flexbook toolbar controls from a previous preview.
+ *
+ * @param {number|string|null} [annotationId]
+ * @return {void}
+ */
+const cleanupFlexbookToolbar = (annotationId = null) => {
+    if (annotationId) {
+        removeDownloadStringsButton(annotationId);
+        return;
+    }
+    $('#navigationtoolbar .local-ivh5pupload-toolbar').remove();
+    $('#title .btns .download-h5p-json').remove();
+};
 
 export default class H5pUpload extends Base {
     /**
@@ -38,16 +53,27 @@ export default class H5pUpload extends Base {
      */
     constructor(annotations, properties) {
         super(annotations, properties);
-        $(document).on('interactionrun', (e) => {
+        this.isflexbook = true;
+
+        $(document).on('interactionrun.ivh5pupload', (e) => {
             const annotation = e.originalEvent.detail.annotation;
-            if (annotation.type === 'h5pupload') {
-                setTimeout(() => {
-                    window.dispatchEvent(new Event('resize'));
-                    const iframe = document.querySelector(`#message[data-id='${annotation.id}'] iframe`);
-                    if (iframe && iframe.contentWindow) {
-                        iframe.contentWindow.dispatchEvent(new Event('resize'));
-                    }
-                }, 1000);
+            if (annotation.type !== 'h5pupload') {
+                cleanupFlexbookToolbar();
+                return;
+            }
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+                const iframe = document.querySelector(`#message[data-id='${annotation.id}'] iframe`);
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.dispatchEvent(new Event('resize'));
+                }
+            }, 1000);
+        });
+
+        $(document).on('interactionclose.ivh5pupload interactionrefresh.ivh5pupload', (e) => {
+            const annotation = e.originalEvent.detail.annotation;
+            if (annotation?.type === 'h5pupload') {
+                cleanupFlexbookToolbar(annotation.id);
             }
         });
     }
@@ -64,6 +90,7 @@ export default class H5pUpload extends Base {
 
     /** @override */
     async postContentRender(annotation, $message, callback) {
+        cleanupFlexbookToolbar(annotation.id);
         $message.addClass('hascontentbank');
         return utils.postContentRender(this, annotation, $message, callback);
     }
@@ -113,9 +140,8 @@ export default class H5pUpload extends Base {
                         && statement.object.id.indexOf('subContentId') < 0
                         && !statement.context.contextActivities.parent) {
                         if (self.isEditMode()) {
-                            $(`#message[data-id='${annotation.id}'] #title .btns .xapi`).remove();
-                            $(`#message[data-id='${annotation.id}'] #title .btns`)
-                                .prepend(`<div class="xapi alert-success d-inline px-2 iv-rounded-pill">
+                            $message.find(`#title .btns .xapi`)
+                            .replaceWith(`<div class="xapi alert-success d-inline px-2 small iv-rounded iv-mr-1">
                                         <i class="fa fa-check iv-mr-2"></i>
                                         ${await getString('xapieventdetected', 'local_ivh5pupload')}
                                         </div>`);
@@ -353,7 +379,7 @@ export default class H5pUpload extends Base {
         annotation.displayoptions = 'popup';
         annotation.hascompletion = 0;
         annotation.completed = true;
-        this.previewInteraction(annotation, log);
+        await this.previewInteraction(annotation, log);
         return log;
     }
 

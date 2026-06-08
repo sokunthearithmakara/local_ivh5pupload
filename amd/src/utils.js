@@ -26,6 +26,149 @@ import $ from 'jquery';
 import {get_string as getString} from 'core/str';
 
 /**
+ * Whether the download-strings button should mount in the Flexbook page nav bar.
+ *
+ * @param {Object} instance
+ * @return {Boolean}
+ */
+const usesNavigationToolbarDownload = (instance) => {
+    if ($('#navigationtoolbar').length === 0) {
+        return false;
+    }
+    if (instance?.isflexbook) {
+        return true;
+    }
+    return document.body?.classList.contains('path-mod-flexbook');
+};
+
+/**
+ * Remove the download-strings button from all mount points.
+ *
+ * @param {number|string} annotationId
+ * @return {void}
+ */
+export const removeDownloadStringsButton = (annotationId) => {
+    $(`#title .btns .download-h5p-json[data-annotation-id="${annotationId}"]`).remove();
+    $(`#navigationtoolbar .local-ivh5pupload-toolbar[data-annotation-id="${annotationId}"]`).remove();
+};
+
+/**
+ * Extract translatable strings from H5P jsonContent params.
+ *
+ * @param {Object} params
+ * @return {Object}
+ */
+const extractTranslatableStrings = (params) => {
+    const extractedStrings = {};
+
+    const extract = (obj, path = '') => {
+        if (obj === null || obj === undefined) {
+            return;
+        }
+        if (typeof obj === 'string') {
+            const isUrl = obj.startsWith('http://')
+                || obj.startsWith('https://')
+                || obj.startsWith('/');
+            const isMime = /^[a-zA-Z0-9!#$&^_-]+\/[a-zA-Z0-9!#$&^_+.-]+$/.test(obj.trim());
+            const isFilePath =
+                /\.(png|jpe?g|gif|svg|mp4|mp3|wav|ogg|webm|pdf|zip|json|html|css|js)$/i
+                    .test(obj.trim());
+            if (obj.trim() !== '' && !isUrl && !isMime && !isFilePath
+                && isNaN(Number(obj)) && obj !== 'true' && obj !== 'false') {
+                extractedStrings[path] = obj;
+            }
+        } else if (Array.isArray(obj)) {
+            obj.forEach((item, index) => {
+                extract(item, path ? `${path}[${index}]` : `${index}`);
+            });
+        } else if (typeof obj === 'object') {
+            for (const key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    if (key === 'media') {
+                        continue;
+                    }
+                    extract(obj[key], path ? `${path}.${key}` : key);
+                }
+            }
+        }
+    };
+
+    extract(params);
+    return extractedStrings;
+};
+
+/**
+ * Bind click handler for the download-strings button.
+ *
+ * @param {jQuery} $host
+ * @param {string} jsonContentStr
+ * @param {number|string} annotationId
+ * @return {void}
+ */
+const bindDownloadStringsButton = ($host, jsonContentStr, annotationId) => {
+    $host.off('click.ivh5pdownload', `.download-h5p-json[data-annotation-id="${annotationId}"]`)
+        .on('click.ivh5pdownload', `.download-h5p-json[data-annotation-id="${annotationId}"]`, function(e) {
+            e.preventDefault();
+
+            try {
+                const params = JSON.parse(jsonContentStr);
+                const extractedStrings = extractTranslatableStrings(params);
+                const dataToDownload = JSON.stringify(extractedStrings, null, 4);
+
+                const blob = new Blob([dataToDownload], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `h5p-strings-${annotationId}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (err) {
+                window.console.error('Error downloading strings: ', err);
+            }
+        });
+};
+
+/**
+ * Mount the download-strings button in edit/preview mode.
+ *
+ * @param {Object} instance
+ * @param {Object} annotation
+ * @param {jQuery} $message
+ * @param {string} jsonContentStr
+ * @return {Promise<void>}
+ */
+export const mountDownloadStringsButton = async(instance, annotation, $message, jsonContentStr) => {
+    const annotationId = annotation.id;
+    removeDownloadStringsButton(annotationId);
+
+    const label = await getString('downloadstringsjson', 'local_ivh5pupload');
+    const title = await getString('downloadstringsjsontitle', 'local_ivh5pupload');
+    const downloadBtnHtml = `
+        <button class="btn btn-secondary btn-sm download-h5p-json iv-mr-2 btn-rounded"
+                type="button"
+                data-annotation-id="${annotationId}"
+                title="${title}">
+            <i class="bi bi-download iv-mr-2"></i>
+            ${label}
+        </button>
+    `;
+
+    if (usesNavigationToolbarDownload(instance)) {
+        $('#navigationtoolbar').prepend(
+            `<div class="local-ivh5pupload-toolbar d-flex align-items-center" `
+            + `data-annotation-id="${annotationId}">${downloadBtnHtml}</div>`
+        );
+        bindDownloadStringsButton($('#navigationtoolbar'), jsonContentStr, annotationId);
+        return;
+    }
+
+    $message.find('#title .btns').prepend(downloadBtnHtml);
+    bindDownloadStringsButton($message.find('#title .btns'), jsonContentStr, annotationId);
+};
+
+/**
  * Shared method to check for H5P loaded iframe, inject custom css stylesheet link,
  * detect current text direction, and display completion information tooltips.
  *
@@ -70,79 +213,7 @@ export const postContentRender = async(instance, annotation, $message, callback)
                             const jsonContentStr = contentData ? contentData.jsonContent : null;
 
                             if (jsonContentStr) {
-                                $message.find('#title .btns .download-h5p-json').remove();
-
-                                const appendBtn = async() => {
-                                    const downloadBtnHtml = `
-                                        <button class="btn btn-secondary btn-sm download-h5p-json iv-mr-2"
-                                                type="button"
-                                                title="${await getString('downloadstringsjsontitle', 'local_ivh5pupload')}">
-                                            <i class="bi bi-download iv-mr-2"></i>
-                                            ${await getString('downloadstringsjson', 'local_ivh5pupload')}
-                                        </button>
-                                    `;
-                                    $message.find('#title .btns').prepend(downloadBtnHtml);
-                                };
-                                appendBtn();
-
-                                $message.find('#title .btns')
-                                    .off('click', '.download-h5p-json')
-                                    .on('click', '.download-h5p-json', function(e) {
-                                        e.preventDefault();
-
-                                        try {
-                                            const params = JSON.parse(jsonContentStr);
-                                            const extractedStrings = {};
-
-                                            const extract = (obj, path = '') => {
-                                                if (obj === null || obj === undefined) {
-                                                    return;
-                                                }
-                                                if (typeof obj === 'string') {
-                                                    const isUrl = obj.startsWith('http://')
-                                                        || obj.startsWith('https://')
-                                                        || obj.startsWith('/');
-                                                    const isMime = /^[a-zA-Z0-9!#$&^_-]+\/[a-zA-Z0-9!#$&^_+.-]+$/.test(obj.trim());
-                                                     const isFilePath =
-                                                         /\.(png|jpe?g|gif|svg|mp4|mp3|wav|ogg|webm|pdf|zip|json|html|css|js)$/i
-                                                         .test(obj.trim());
-                                                    if (obj.trim() !== '' && !isUrl && !isMime && !isFilePath
-                                                        && isNaN(Number(obj)) && obj !== 'true' && obj !== 'false') {
-                                                        extractedStrings[path] = obj;
-                                                    }
-                                                } else if (Array.isArray(obj)) {
-                                                    obj.forEach((item, index) => {
-                                                        extract(item, path ? `${path}[${index}]` : `${index}`);
-                                                    });
-                                                } else if (typeof obj === 'object') {
-                                                    for (const key in obj) {
-                                                        if (obj.hasOwnProperty(key)) {
-                                                            if (key === 'media') {
-                                                                continue;
-                                                            }
-                                                            extract(obj[key], path ? `${path}.${key}` : key);
-                                                        }
-                                                    }
-                                                }
-                                            };
-
-                                            extract(params);
-                                            const dataToDownload = JSON.stringify(extractedStrings, null, 4);
-
-                                            // Trigger download
-                                            const blob = new Blob([dataToDownload], {type: 'application/json'});
-                                            const url = URL.createObjectURL(blob);
-                                            const a = document.createElement('a');
-                                            a.href = url;
-                                            a.download = `h5p-strings-${annotation.id}.json`;
-                                            document.body.appendChild(a);
-                                            a.click();
-                                            document.body.removeChild(a);
-                                            URL.revokeObjectURL(url);
-                                        } catch (err) {
-                                            window.console.error('Error downloading strings: ', err);
-                                        }
-                                    });
+                                mountDownloadStringsButton(instance, annotation, $message, jsonContentStr);
                             }
                         }
                     }
@@ -258,8 +329,8 @@ export const initH5PIntegration = (instance, annotation, $message, log, saveStat
             if (instance.isEditMode()) {
                 $message.find(`#title .btns .xapi`).remove();
                 $message.find(`#title .btns`)
-                    .prepend(`<div class="xapi alert-secondary px-2
-             iv-rounded-pill">${await getString('xapicheck', 'local_ivh5pupload')}</div>`);
+                    .prepend(`<div class="xapi bg-secondary d-inline px-2 small iv-rounded iv-mr-1 text-dark">
+                        ${await getString('xapicheck', 'local_ivh5pupload')}</div>`);
             }
 
             const H5PIntegration = iframe.contentWindow.H5PIntegration;
@@ -437,5 +508,7 @@ export default {
     initH5PIntegration,
     resizeIframe,
     renderReportView,
-    mergeTranslation
+    mergeTranslation,
+    mountDownloadStringsButton,
+    removeDownloadStringsButton,
 };

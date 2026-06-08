@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.1] - 2026-06-08
+
+- Mount download-strings button in Flexbook navigation toolbar with cleanup on close.
+- Complete Khmer (km) language pack and Flexbook toolbar styling.
+- Require Interactive Video 1.8.1+ (2026060800).
+
 ## [1.5] - 2026-05-26
 
 - Added Flexbook support with drag-and-drop for `.h5p` and `.html` files.

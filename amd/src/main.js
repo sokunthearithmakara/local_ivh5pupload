@@ -125,9 +125,8 @@ export default class H5pUpload extends Base {
                         && statement.object.id.indexOf('subContentId') < 0
                         && !statement.context.contextActivities.parent) {
                         if (self.isEditMode()) {
-                            $message.find(`#title .btns .xapi`).remove();
-                            $message.find(`#title .btns`)
-                                .prepend(`<div class="xapi alert-success d-inline px-2 rounded-pill">
+                            $message.find(`#title .btns .xapi`)
+                            .replaceWith(`<div class="xapi alert-success d-inline px-2 small iv-rounded iv-mr-1">
                                             <i class="fa fa-check iv-mr-2"></i>
                                             ${await getString('xapieventdetected', 'local_ivh5pupload')}
                                         </div>`);
