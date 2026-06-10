@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.2] - 2026-06-10
+
+### Fixed
+
+- Translation JSON files were saved to the `text2` file area instead of `itext2`. Item embedded files belong in `itext*`; `text*` file areas are reserved for learner log payloads. Re-upload translation files saved under the old area if needed.
+
 ## [1.5.1] - 2026-06-08
 
 - Mount download-strings button in Flexbook navigation toolbar with cleanup on close.

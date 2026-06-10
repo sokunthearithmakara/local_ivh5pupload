@@ -134,7 +134,7 @@ class main extends \ivplugin_richtext\main {
 
             // Fetch translation files from text2 file area.
             $translationdata = '';
-            $filestrans = $fs->get_area_files($arg['contextid'], $component, 'text2', $arg['id'], 'id DESC', false);
+            $filestrans = $fs->get_area_files($arg['contextid'], $component, 'itext2', $arg['id'], 'id DESC', false);
             $translations = [];
             foreach ($filestrans as $tfile) {
                 if ($tfile->is_directory()) {

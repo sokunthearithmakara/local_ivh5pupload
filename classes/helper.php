@@ -25,6 +25,23 @@ namespace local_ivh5pupload;
  */
 class helper {
     /**
+     * Moodle filearea for an item text field.
+     *
+     * @param string $component
+     * @param string $field
+     * @return string
+     */
+    public static function item_filearea(string $component, string $field): string {
+        if (
+            in_array($component, ['mod_interactivevideo', 'mod_flexbook'], true)
+            && preg_match('/^text([123])$/', $field, $matches)
+        ) {
+            return 'itext' . $matches[1];
+        }
+        return $field;
+    }
+
+    /**
      * Prepares data for dynamic form submission.
      *
      * @param \stdClass $data The form data.
@@ -56,7 +73,13 @@ class helper {
 
         // Prepare translation files in draft area from text2 file area.
         $draftitemidtrans = file_get_submitted_draft_itemid('text2');
-        file_prepare_draft_area($draftitemidtrans, $data->contextid, $component, 'text2', $data->id);
+        file_prepare_draft_area(
+            $draftitemidtrans,
+            $data->contextid,
+            $component,
+            self::item_filearea($component, 'text2'),
+            $data->id
+        );
         $data->text2 = $draftitemidtrans;
 
         return $data;
@@ -89,7 +112,7 @@ class helper {
                 $draftitemidtrans,
                 $fromform->contextid,
                 $component,
-                'text2',
+                self::item_filearea($component, 'text2'),
                 $fromform->id
             );
         }
