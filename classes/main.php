@@ -76,6 +76,49 @@ class main extends \ivplugin_richtext\main {
     }
 
     /**
+     * Flexbook DND / programmatic creation fields merged from flexbook_defaults.
+     *
+     * @return string[]
+     */
+    public function get_dnd_default_fields(): array {
+        return array_merge(parent::get_dnd_default_fields(), ['char1', 'char2']);
+    }
+
+    /**
+     * Apply completion and advanced defaults after DND merge.
+     *
+     * @param \stdClass $data
+     * @return void
+     */
+    protected function apply_creation_defaults(\stdClass $data): void {
+        $courseid = (int) ($data->courseid ?? 0);
+        if (!$this->has_flexbook_course_defaults($courseid, 'h5pupload')) {
+            $data->completiontracking = 'complete';
+            $data->hascompletion = 1;
+            $data->xp = 1;
+            $advanced = $this->flexbook_advanced();
+            $advanced['savecurrentstate'] = 0;
+            $data->advanced = json_encode($advanced);
+        } else {
+            $this->normalize_merged_completion($data);
+            if (empty($data->advanced)) {
+                $advanced = $this->flexbook_advanced();
+                $advanced['savecurrentstate'] = 0;
+                $data->advanced = json_encode($advanced);
+            } else {
+                $advanced = json_decode($data->advanced, true);
+                if (!is_array($advanced)) {
+                    $advanced = $this->flexbook_advanced();
+                }
+                if (!array_key_exists('savecurrentstate', $advanced)) {
+                    $advanced['savecurrentstate'] = 0;
+                }
+                $data->advanced = json_encode($advanced);
+            }
+        }
+    }
+
+    /**
      * Create a new interaction instance.
      *
      * @param array $data The data for the new instance.
@@ -87,14 +130,7 @@ class main extends \ivplugin_richtext\main {
         $draftitemid = $data->draftitemid;
         unset($data->draftitemid);
 
-        // Form default advanced settings if empty.
-        if (empty($data->advanced)) {
-            $data->advanced = $this->flexbook_advanced();
-            $data->advanced = json_encode($data->advanced);
-            $data->completiontracking = 'complete';
-            $data->hascompletion = 1;
-            $data->xp = 1;
-        }
+        $this->apply_creation_defaults($data);
 
         $data->id = $DB->insert_record('flexbook_items', $data);
 
