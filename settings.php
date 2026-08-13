@@ -26,6 +26,8 @@ defined('MOODLE_INTERNAL') || die;
 if ($hassiteconfig) {
     $pluginname = get_string('pluginname', 'local_ivh5pupload');
 
+    \mod_interactivevideo\local\admin_tree::ensure_contenttype_category($ADMIN);
+
     $ivsettings = new admin_settingpage('local_ivh5pupload_settings', $pluginname);
     $ADMIN->add('modivcontenttype', $ivsettings);
 
