@@ -50,6 +50,12 @@ class main extends \ivplugin_richtext\main {
             }
         }
 
+        $inheritstyle = get_config('local_ivh5pupload', 'inheritstyle');
+        $customcsstext = '';
+        if ($inheritstyle && get_config('core_h5p', 'h5pcustomcss')) {
+            $customcsstext = get_config('core_h5p', 'h5pcustomcss');
+        }
+
         return [
             'name' => 'h5pupload',
             'icon' => 'bi bi-file-zip',
@@ -65,6 +71,7 @@ class main extends \ivplugin_richtext\main {
             'authorlink' => 'mailto:sokunthearithmakara@gmail.com',
             'tutorial' => get_string('tutorialurl', 'local_ivh5pupload'),
             'customcss' => $customcss,
+            'customcsstext' => $customcsstext,
             'preloadstrings' => false,
             'flexbook' => true,
             'fbdescription' => get_string('h5puploaddescription', 'local_ivh5pupload'),

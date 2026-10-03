@@ -31,6 +31,15 @@ if ($hassiteconfig) {
     $ivsettings = new admin_settingpage('local_ivh5pupload_settings', $pluginname);
     $ADMIN->add('modivcontenttype', $ivsettings);
 
+    // Inherit style from H5P Moodle setting.
+    $config = new admin_setting_configcheckbox(
+        'local_ivh5pupload/inheritstyle',
+        get_string('inheritstyle', 'local_ivh5pupload'),
+        get_string('inheritstyledesc', 'local_ivh5pupload'),
+        0
+    );
+    $ivsettings->add($config);
+
     // CSS upload settings.
     $config = new admin_setting_configstoredfile(
         'local_ivh5pupload/customcss',
